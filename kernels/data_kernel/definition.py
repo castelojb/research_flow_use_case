@@ -1,6 +1,6 @@
 from gloe import Transformer
 from gloe.collection import Map
-from gloe.utils import forward_incoming
+from gloe.utils import attach
 from pydantic import ConfigDict
 from research_flow.kernels.base_kernel import BaseKernel
 from research_flow.types.machine_learning.machine_learning_data_parts_model import (
@@ -17,11 +17,22 @@ from research_flow.types.series.single_series_to_series_signal_model import (
     SingleSeriesToSeriesSignalModel,
 )
 
-from kernels.data_kernel.transformers.data_processing import segment_signals, split_signal_data_by_time, \
-    normalize_machine_learning_data_parts, clean_ecg_ppg_signals, get_r_and_s_signals_peaks, align_signals, \
-    union_signals
-from kernels.data_kernel.transformers.utils import pick_train, format_to_experiments, pick_validation, pick_test, \
-    assemble_machine_learning_data_parts
+from kernels.data_kernel.transformers.data_processing import (
+    align_signals,
+    clean_ecg_ppg_signals,
+    get_r_and_s_signals_peaks,
+    normalize_machine_learning_data_parts,
+    segment_signals,
+    split_signal_data_by_time,
+    union_signals,
+)
+from kernels.data_kernel.transformers.utils import (
+    assemble_machine_learning_data_parts,
+    format_to_experiments,
+    pick_test,
+    pick_train,
+    pick_validation,
+)
 
 
 class PatientSpecificDataKernel(
@@ -33,7 +44,7 @@ class PatientSpecificDataKernel(
 
     data_processing_transformer: Transformer[
         SingleSeriesToSeriesSignalModel, SingleSeriesToSeriesSignalModel
-    ]
+    ] = (clean_ecg_ppg_signals >> attach(get_r_and_s_signals_peaks) >> align_signals)
 
     data_segmented_transformer: Transformer[
         SingleSeriesToSeriesSignalModel, list[SingleSeriesToSeriesSignalModel]
@@ -60,11 +71,7 @@ class PatientSpecificDataKernel(
 
     clean_data_transformer: Transformer[
         SingleSeriesToSeriesSignalModel, SingleSeriesToSeriesSignalModel
-    ] = (
-        clean_ecg_ppg_signals
-        >> forward_incoming(get_r_and_s_signals_peaks)
-        >> align_signals
-    )
+    ] = (clean_ecg_ppg_signals >> attach(get_r_and_s_signals_peaks) >> align_signals)
 
     @property
     def pipeline_graph(
