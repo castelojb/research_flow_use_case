@@ -1,7 +1,7 @@
 import pandas as pd
 from gloe import Transformer
 from gloe.collection import Map
-from gloe.utils import forward
+from gloe.utils import forward, attach
 from pydantic import ConfigDict
 from research_flow.kernels.base_kernel import BaseKernel
 from research_flow.machine_learning.base_machine_learning_algorithm import (
@@ -24,6 +24,7 @@ from kernels.evaluation_kernel.transformers.utils import (
     pick_test,
     pick_model,
     build_score_dataframe,
+    denomalize,
 )
 
 
@@ -62,14 +63,17 @@ class ModelEvaluateKernel(
 
         pipeline = (
             Map(
-                forward[
-                    tuple[
-                        MachineLearningAlgorithm[ModelType, ModelConfig, DataType],
-                        MachineLearningDataPartsWithScalersModel,
-                    ]
-                ]()
-                >> (pick_data >> pick_test >> self.data_converter, pick_model)
-                >> do_predictions
+                attach(
+                    forward[
+                        tuple[
+                            MachineLearningAlgorithm[ModelType, ModelConfig, DataType],
+                            MachineLearningDataPartsWithScalersModel,
+                        ]
+                    ]()
+                    >> (pick_data >> pick_test >> self.data_converter, pick_model)
+                    >> do_predictions
+                )
+                >> denomalize
                 >> evaluate_calculations
             )
             >> build_score_dataframe

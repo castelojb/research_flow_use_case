@@ -75,3 +75,32 @@ def flat_signals(data: DataType) -> tuple[Prediction, Real]:
 def build_score_report(metric_result: float, metric_name: str) -> MetricScore:
 
     return MetricScore(metric_name=metric_name, score=metric_result)
+
+
+@transformer
+def denomalize(
+    data: tuple[
+        DataType,
+        tuple[
+            MachineLearningAlgorithm[ModelType, ModelConfig, DataType],
+            MachineLearningDataPartsWithScalersModel,
+        ],
+    ]
+) -> DataType:
+
+    data_preds, (_, data_with_scalers) = data
+
+    input_test_scaler = data_with_scalers.test_scaler_input_series
+    output_test_scaler = data_with_scalers.test_scaler_output_series
+
+    denomalized_output = output_test_scaler.inverse_transform(data_preds.output_series)
+    denomalized_input = input_test_scaler.inverse_transform(data_preds.input_series)
+    denomalized_pred = output_test_scaler.inverse_transform(data_preds.prediction)
+
+    return data_preds.copy(
+        update={
+            "prediction": denomalized_pred,
+            "input_series": denomalized_input,
+            "output_series": denomalized_output,
+        }
+    )
