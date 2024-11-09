@@ -23,9 +23,22 @@ class KerasMachineLearningAlgorithm(
     Generic[ModelConfig],
 ):
     def save_alg(self, path: str):
+        """
+        Saves the trained Keras model to the specified file path.
+
+        Parameters:
+        path (str): The file path where the trained model will be saved.
+        """
+        self.alg_trained.save(path)
         self.alg_trained.save(path)
 
     def load_alg(self, path: str):
+        """
+        Loads a saved Keras model from the specified file path.
+
+        Parameters:
+        path (str): The file path from which the trained model will be loaded.
+        """
         self.alg_trained = load_model(path)
 
     def fit(
@@ -35,6 +48,18 @@ class KerasMachineLearningAlgorithm(
         model_config: ModelConfig,
         val_data: Optional[KerasDataModel] = None,
     ) -> "KerasMachineLearningAlgorithm":
+        """
+        Trains a Keras model using the given data and configuration.
+
+        Parameters:
+        data (KerasDataModel): The data to be used for training.
+        train_config (KerasTrainConfigs): The configuration for the training process.
+        model_config (ModelConfig): The configuration for the model.
+        val_data (Optional[KerasDataModel]): The data to be used for validation. Defaults to None.
+
+        Returns:
+        KerasMachineLearningAlgorithm: The instance of the class with the trained model.
+        """
         x = data.input_series_for_keras
         y = data.output_series_for_keras
 
@@ -83,6 +108,15 @@ class KerasMachineLearningAlgorithm(
         return result
 
     def predict(self, data: KerasDataModel) -> KerasDataModel:
+        """
+        This function takes a KerasDataModel object and makes a prediction on its input series.
+        If the model has not been trained yet, the function returns the input data as is.
+        Otherwise, it makes a prediction on the input series and returns a new KerasDataModel object
+        with the prediction as a separate field.
+
+        :param data: KerasDataModel: The data to make a prediction on.
+        :return: KerasDataModel: The input data with a prediction if the model has been trained.
+        """
         if self.alg_trained is None:
             return data
 

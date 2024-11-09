@@ -37,7 +37,6 @@ def __make_segmentation(
     :param overlap: float: Determine the amount of overlap between segments
     :param segment_length: Optional[int]: Specify the length of a segment
     :return: A list of lists
-    :doc-author: Trelent
     """
     signal_lenght = len(signal)
 
@@ -75,7 +74,6 @@ def segment_signals(
     :param overlap: float: Determine how much overlap there should be between segments
     :param : Define the time in seconds that each segment will have
     :return: A list of singleseriestoseriessignalmodel objects
-    :doc-author: Trelent
     """
     input_segments = __make_segmentation(
         signals.input_series,
@@ -110,6 +108,19 @@ def __apply_and_fit_custom_scalar(
     scaler_output_series: Scaler,
     fit_transformer: bool = True,
 ) -> MachineLearningDataModel:
+    """
+    Normalizes the input and output series of a machine learning data model using custom scalers.
+
+    Args:
+        signals (MachineLearningDataModel): Machine learning data model containing the input and output series.
+        scaler_input_series (Scaler): Scaler to normalize the input series.
+        scaler_output_series (Scaler): Scaler to normalize the output series.
+        fit_transformer (bool, optional): If True, fits the scalers to the data before normalizing. Defaults to True.
+
+    Returns:
+        MachineLearningDataModel: Machine learning data model with the normalized input and output series.
+    """
+
     if fit_transformer:
         scaler_input_series.fit(signals.input_series)
         scaler_output_series.fit(signals.output_series)
@@ -137,7 +148,6 @@ def split_signal_data_by_time(
     :param signal: MultipleSeriesToSeriesSignalModel: Pass the signal to be split
     :param split_percentage: float: Determine how much of the data should be used for training and how much for testing
     :return: A tuple of two multipleseriestoseriessignalmodel objects
-    :doc-author: Trelent
     """
     number_of_segments = len(signal.input_series)
     split_size = int(number_of_segments * split_percentage)
@@ -173,6 +183,18 @@ def normalize_machine_learning_data_parts(
     test_scaler_input_series: Scaler,
     test_scaler_output_series: Scaler,
 ) -> MachineLearningDataPartsWithScalersModel:
+    """
+    The normalize_machine_learning_data_parts function takes a MachineLearningDataPartsModel, as well as four scalers, and returns a MachineLearningDataPartsWithScalersModel.
+
+    The function will normalize all the input and output series of the given data parts using the given scalers. The scalers are given as arguments to the function. The function will also return the scalers used for normalization, so that the same scalers can be used to normalize new data.
+
+    :param data_parts: MachineLearningDataPartsModel: Pass the data to be normalized
+    :param train_scaler_input_series: Scaler: Scaler to normalize the input series of the training data
+    :param train_scaler_output_series: Scaler: Scaler to normalize the output series of the training data
+    :param test_scaler_input_series: Scaler: Scaler to normalize the input series of the test data
+    :param test_scaler_output_series: Scaler: Scaler to normalize the output series of the test data
+    :return: A MachineLearningDataPartsWithScalersModel containing the normalized data and the used scalers
+    """
     train_scaler_input_series_scaler = train_scaler_input_series.copy_empty_like()
     train_scaler_output_series_scaler = train_scaler_output_series.copy_empty_like()
     test_scaler_input_series_scaler = test_scaler_input_series.copy_empty_like()
@@ -218,7 +240,6 @@ def clean_ecg_ppg_signals(
     :param signals: SingleSeriesToSeriesSignalModel: Pass the data into the function
     :param input_series_is_ecg: bool: Determine which signal is the ecg and which one is the ppg
     :return: A singleseriestoseriessignalmodel object
-    :doc-author: Trelent
     """
 
     ecg_cleaned = ecg_clean(
@@ -248,7 +269,6 @@ def __get_ecg_r_picks(ecg: list[float], ecg_sampling_rate: int) -> list[int]:
     :param ecg: list[float]: Pass in the ecg data, and the ecg_sampling_rate: int parameter is used to pass in the sampling rate of that data
     :param ecg_sampling_rate: int: Set the sampling rate of the ecg signal
     :return: A list of integers
-    :doc-author: Trelent
     """
     r_peak = ecg_findpeaks(
         np.array(ecg),
@@ -271,7 +291,6 @@ def __get_ppg_s_peaks(
     :param ppg_sampling_rate: int: Determine the sampling rate of the ppg data
     :param : Get the peaks of the ppg signal
     :return: A list of the indices of the peaks in
-    :doc-author: Trelent
     """
 
     peaks = ppg_findpeaks(
@@ -294,7 +313,6 @@ def get_r_and_s_signals_peaks(
     :param signals: SingleSeriesToSeriesSignalModel: Pass in the input and output series, as well as their frequencies
     :param input_series_is_ecg: bool: Determine whether the input series is an ecg or a ppg
     :return: A singleseriespeaksmodel object, which contains the r_peaks and s_peaks
-    :doc-author: Trelent
     """
 
     r_peaks = __get_ecg_r_picks(signals.output_series, signals.output_series_frequency)
@@ -321,7 +339,6 @@ def __align_peaks_and_signal(
     :param signal: list[float]: Pass in the signal data
     :param window_size: Define the window size around each peak to look for a better peak
     :return: A list of integers
-    :doc-author: Trelent
     """
     peak_fixed = []
 
@@ -338,13 +355,34 @@ def __align_peaks_and_signal(
 def __obtain_previous_peak(
     r_peak: list[int], s_peak: list[int], index: int
 ) -> list[int]:
+    """
+    The __obtain_previous_peak function takes in a list of R-peaks and a list of S-peaks
+    and an index into the S-peaks list, and returns a list of all R-peaks that are
+    before the R-peak at the given index. The function is used to align peaks that were
+    found using different methods.
+
+    :param r_peak: list[int]: Store the R-peak locations
+    :param s_peak: list[int]: Store the S-peak locations
+    :param index: int: Determine which S-peak to look for R-peaks for
+    :return: A list of integers
+    """
     return list(filter(lambda x: x < s_peak[index], r_peak))
 
 
 def __align_signals(
     signals: SingleSeriesToSeriesSignalModel, r_peak: list[int], s_peak: list[int]
 ) -> SingleSeriesToSeriesSignalModel:
+    """
+    The __align_signals function takes in a SingleSeriesToSeriesSignalModel object and two lists of peaks (R-peaks and S-peaks)
+    and returns a new SingleSeriesToSeriesSignalModel object where the input and output series are aligned.
+    The function does this by finding the first R-peak after the first S-peak, and then aligning the two series based on that.
+    The function is used to align peaks that were found using different methods.
 
+    :param signals: SingleSeriesToSeriesSignalModel: Pass in the input and output series, as well as their frequencies
+    :param r_peak: list[int]: Store the R-peak locations
+    :param s_peak: list[int]: Store the S-peak locations
+    :return: A singleseriestoseriessignalmodel object
+    """
     all_previous_peak = [
         (index, __obtain_previous_peak(r_peak, s_peak, index))
         for index in range(2, len(s_peak))
@@ -382,6 +420,15 @@ def __align_signals(
 def align_signals(
     data: tuple[SingleSeriesPeaksModel, SingleSeriesToSeriesSignalModel]
 ) -> SingleSeriesToSeriesSignalModel:
+    """
+    The align_signals function takes a tuple of a SingleSeriesPeaksModel object and a SingleSeriesToSeriesSignalModel object,
+    and returns a new SingleSeriesToSeriesSignalModel object where the input and output series are aligned.
+    The function does this by first finding the best R-peak and S-peak values for each beat, and then aligning the two series based on those.
+    The function is used to align peaks that were found using different methods.
+
+    :param data: tuple[SingleSeriesPeaksModel, SingleSeriesToSeriesSignalModel]: Pass in the peaks and signals to be aligned
+    :return: A SingleSeriesToSeriesSignalModel object
+    """
     peaks, signals = data
 
     if signals.input_series_frequency != signals.output_series_frequency:
@@ -404,21 +451,14 @@ def union_signals(
     """
     The union_signals function takes a list of SingleSeriesToSeriesSignalModel objects and returns a MultipleSeriesToSeriesSignalModel object.
 
-    :param signals: list[SingleSeriesToSeriesSignalModel]: Pass a list of singleseriestoseriessignalmodel objects
-    :param : Specify the type of the input
+    :param signals: list[SingleSeriesToSeriesSignalModel]: Pass a list of MultipleSeriesToSeriesSignalModel objects
     :return: A multipleseriestoseriessignalmodel
-    :doc-author: Trelent
     """
     inputs = [segment.input_series for segment in signals]
     outputs = [segment.output_series for segment in signals]
 
     input_series_frequencys = {segment.input_series_frequency for segment in signals}
     output_series_frequency = {segment.output_series_frequency for segment in signals}
-
-    if len(input_series_frequencys) != 1 or len(output_series_frequency) != 1:
-        raise Exception(
-            "all segments of a signal type must have the same sampling rate"
-        )
 
     return MultipleSeriesToSeriesSignalModel(
         input_series=inputs,

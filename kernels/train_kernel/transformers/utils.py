@@ -17,6 +17,15 @@ from research_flow.types.machine_learning.machine_learning_data_parts_with_scale
 def pick_train(
     data: MachineLearningDataPartsWithScalersModel,
 ) -> MachineLearningDataModel:
+    """
+    A transformer that takes a MachineLearningDataPartsWithScalersModel and returns the MachineLearningDataModel that is stored in the "train" attribute of the input.
+
+    Args:
+        data (MachineLearningDataPartsWithScalersModel): The input data model
+
+    Returns:
+        MachineLearningDataModel: The train data model
+    """
     return data.train
 
 
@@ -24,6 +33,15 @@ def pick_train(
 def pick_validation(
     data: MachineLearningDataPartsWithScalersModel,
 ) -> MachineLearningDataModel:
+    """
+    A transformer that takes a MachineLearningDataPartsWithScalersModel and returns the MachineLearningDataModel that is stored in the "validation" attribute of the input.
+
+    Args:
+        data (MachineLearningDataPartsWithScalersModel): The input data model
+
+    Returns:
+        MachineLearningDataModel: The validation data model
+    """
     return data.validation
 
 
@@ -31,6 +49,15 @@ def pick_validation(
 def pick_test(
     data: MachineLearningDataPartsWithScalersModel,
 ) -> MachineLearningDataModel:
+    """
+    A transformer that extracts the test data model from a MachineLearningDataPartsWithScalersModel.
+
+    Args:
+        data (MachineLearningDataPartsWithScalersModel): The input data model containing train, validation, and test parts.
+
+    Returns:
+        MachineLearningDataModel: The test data model extracted from the input.
+    """
     return data.test
 
 
@@ -39,6 +66,19 @@ def parse_information_to_train(
     data: tuple[DataType, DataType],
     model_config: ModelConfig,
 ) -> tuple[ModelConfig, tuple[DataType, DataType]]:
+    """
+    A partial transformer that takes a tuple of two data models and a model configuration model.
+    It returns a tuple containing the model configuration and the two data models.
+
+    This transformer is used to parse the information needed to train a machine learning algorithm.
+
+    Args:
+        data (tuple[DataType, DataType]): A tuple containing two data models.
+        model_config (ModelConfig): The configuration model for the machine learning algorithm.
+
+    Returns:
+        tuple[ModelConfig, tuple[DataType, DataType]]: A tuple containing the model configuration and the two data models.
+    """
     train, val = data
 
     return model_config, (train, val)
@@ -50,6 +90,20 @@ def train_ml_alg(
     ml_alg: MachineLearningAlgorithm[ModelType, ModelConfig, DataType],
     train_config: TrainConfigBaseModel,
 ) -> MachineLearningAlgorithm[ModelType, ModelConfig, DataType]:
+    """
+    A partial transformer that takes a tuple of two data models, a machine learning algorithm instance,
+    and a training configuration model. It returns the trained machine learning algorithm instance.
+
+    This transformer is used to train a machine learning algorithm using the given data and configuration.
+
+    Args:
+        data (tuple[ModelConfig, tuple[DataType, DataType]]): A tuple containing two data models.
+        ml_alg (MachineLearningAlgorithm[ModelType, ModelConfig, DataType]): The machine learning algorithm instance.
+        train_config (TrainConfigBaseModel): The training configuration model.
+
+    Returns:
+        MachineLearningAlgorithm[ModelType, ModelConfig, DataType]: The trained machine learning algorithm instance.
+    """
     model_config, (train, val) = data
 
     model = ml_alg.fit(

@@ -38,6 +38,35 @@ from kernels.data_kernel.transformers.utils import (
 class PatientSpecificDataKernel(
     BaseKernel[str, list[MachineLearningDataPartsWithScalersModel]]
 ):
+    """
+    A class representing a data processing pipeline for patient-specific data.
+
+    The `PatientSpecificDataKernel` class defines a pipeline that reads data from a file,
+    applies various transformations to clean and process the data, segments the data into
+    overlapping segments, splits the data into training, validation, and test sets, and
+    normalizes the data using scalers. The resulting output is a list of
+    `MachineLearningDataPartsWithScalersModel` objects, which contain the processed data
+    and scalers.
+
+    The pipeline is defined as a composition of several transformers, which are applied to
+    each patient's data. The `pipeline_graph` property returns a `Transformer` object that
+    represents the entire pipeline, which can be used to convert a path to a patient's data
+    file into a list of processed data objects.
+
+    Attributes:
+        model_config (ConfigDict): A configuration dictionary for the model.
+        read_data_transformer (Transformer[str, list[SingleSeriesToSeriesSignalModel]]): A transformer that reads data from a file.
+        data_processing_transformer (Transformer[SingleSeriesToSeriesSignalModel, SingleSeriesToSeriesSignalModel]): A transformer that cleans and processes the data.
+        data_segmented_transformer (Transformer[SingleSeriesToSeriesSignalModel, list[SingleSeriesToSeriesSignalModel]]): A transformer that segments the data into overlapping segments.
+        data_split_data_into_train_and_test (Transformer[MultipleSeriesToSeriesSignalModel, tuple[MultipleSeriesToSeriesSignalModel, MultipleSeriesToSeriesSignalModel]]): A transformer that splits the data into a training and test set.
+        data_split_train_into_validation_and_train (Transformer[MultipleSeriesToSeriesSignalModel, tuple[MultipleSeriesToSeriesSignalModel, MultipleSeriesToSeriesSignalModel]]): A transformer that splits the training set into a validation and training set.
+        normalize_data_transformer (Transformer[MachineLearningDataPartsModel, MachineLearningDataPartsWithScalersModel]): A transformer that normalizes the data using scalers.
+        clean_data_transformer (Transformer[SingleSeriesToSeriesSignalModel, SingleSeriesToSeriesSignalModel]): A transformer that cleans the signal and detects R- and S-peaks.
+
+    Properties:
+        pipeline_graph (Transformer[str, list[MachineLearningDataPartsWithScalersModel]]): A property that returns a `Transformer` object representing the entire pipeline.
+    """
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     read_data_transformer: Transformer[str, list[SingleSeriesToSeriesSignalModel]]
@@ -77,6 +106,23 @@ class PatientSpecificDataKernel(
     def pipeline_graph(
         self,
     ) -> Transformer[str, list[MachineLearningDataPartsWithScalersModel]]:
+        """
+        The `pipeline_graph` property returns a Transformer object that can be used to convert a path to a patient's data file into a list of MachineLearningDataPartsWithScalersModel objects.
+
+        The pipeline first reads the data from the specified path, then applies the following steps to each signal:
+        - applies the `data_processing_transformer` to clean the signal and detect R- and S-peaks
+        - segments the signal into overlapping segments
+        - unions the segments
+        - splits the data into a training and test set
+        - splits the training set into a validation and training set
+        - formats each of the three sets into a MachineLearningDataModel object
+        - assembles the three sets into a single MachineLearningDataPartsWithScalersModel object
+        - normalizes the data using the given scalers
+
+        The pipeline then applies the same steps to each patient's data and returns the resulting list of MachineLearningDataPartsWithScalersModel objects.
+
+        :return: A Transformer object that can be used to convert a path to a patient's data file into a list of MachineLearningDataPartsWithScalersModel objects
+        """
         per_patient_processing = (
             self.data_processing_transformer
             >> self.data_segmented_transformer

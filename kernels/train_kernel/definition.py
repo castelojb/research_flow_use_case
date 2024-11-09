@@ -36,6 +36,22 @@ class PatientSpecificTrainKernel(
         ],
     ],
 ):
+    """
+    A training kernel for machine learning algorithms that is specific to a patient.
+
+    The `PatientSpecificTrainKernel` class represents a training pipeline for machine learning algorithms. It takes a list of `MachineLearningDataPartsWithScalersModel` objects as input, processes them into training and validation data, trains a machine learning algorithm, and returns a list of tuples containing the trained algorithm and its corresponding data parts.
+
+    Attributes:
+        model_config (ConfigDict): A configuration dictionary for the machine learning model.
+        ml_alg (ModelInstance[MachineLearningAlgorithm[ModelType, ModelConfig, DataType]]): An instance of the machine learning algorithm.
+        train_config (ModelInstance[TrainConfigBaseModel]): An instance of the training configuration.
+        ml_config (ModelConfig): The configuration for the machine learning model.
+        data_converter (Transformer[MachineLearningDataModel, DataType]): A transformer that converts the data into the desired format.
+
+    Methods:
+        pipeline_graph(): A transformer that converts input data into trained machine learning models and their associated data parts.
+    """
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     ml_alg: ModelInstance[MachineLearningAlgorithm[ModelType, ModelConfig, DataType]]
@@ -58,6 +74,18 @@ class PatientSpecificTrainKernel(
             ]
         ],
     ]:
+        """
+        Constructs and returns a training pipeline graph for machine learning algorithms.
+
+        The pipeline processes a list of `MachineLearningDataPartsWithScalersModel` by separating
+        it into training and validation data, converting the data into the desired format,
+        and training the machine learning algorithm. The result is a list of tuples, each containing
+        a trained `MachineLearningAlgorithm` and the corresponding data parts.
+
+        Returns:
+            Transformer: A transformer that converts input data into trained machine learning models
+            and their associated data parts.
+        """
         train_pipeline = (
             forward[MachineLearningDataPartsWithScalersModel]()
             >> (
