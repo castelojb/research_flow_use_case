@@ -1,17 +1,20 @@
+from itertools import chain
+
 import pandas as pd
-from gloe import transformer
+from gloe import transformer, partial_transformer
 from research_flow.machine_learning.base_machine_learning_algorithm import (
     MachineLearningAlgorithm,
     DataType,
 )
-from research_flow.types.comon_types import ModelType, ModelConfig
+from research_flow.types.comon_types import ModelType, ModelConfig, Prediction, Real
 from research_flow.types.machine_learning.machine_learning_data_model import (
     MachineLearningDataModel,
 )
 from research_flow.types.machine_learning.machine_learning_data_parts_with_scalers_model import (
     MachineLearningDataPartsWithScalersModel,
 )
-from research_flow.types.metrics.metric_score_model import MetricScoreModel
+
+from kernels.evaluation_kernel.metrics.score_model import MetricScore
 
 
 @transformer
@@ -42,7 +45,7 @@ def pick_model(
 
 
 @transformer
-def build_score_dataframe(data: list[list[MetricScoreModel]]) -> pd.DataFrame:
+def build_score_dataframe(data: list[list[MetricScore]]) -> pd.DataFrame:
     rows = []
 
     for row in data:
@@ -53,3 +56,22 @@ def build_score_dataframe(data: list[list[MetricScoreModel]]) -> pd.DataFrame:
     df = pd.DataFrame(dicts)
 
     return df
+
+
+@transformer
+def flat_signals(data: DataType) -> tuple[Prediction, Real]:
+    preds = data.prediction
+
+    real = data.output_series
+
+    preds_flatten = list(chain.from_iterable(preds))
+
+    real_flatten = list(chain.from_iterable(real))
+
+    return preds_flatten, real_flatten
+
+
+@partial_transformer
+def build_score_report(metric_result: float, metric_name: str) -> MetricScore:
+
+    return MetricScore(metric_name=metric_name, score=metric_result)

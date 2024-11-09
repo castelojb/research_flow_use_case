@@ -1,5 +1,6 @@
 import pandas as pd
 from gloe import Transformer
+from gloe.collection import Map
 from gloe.utils import forward
 from pydantic import ConfigDict
 from research_flow.kernels.base_kernel import BaseKernel
@@ -8,6 +9,9 @@ from research_flow.machine_learning.base_machine_learning_algorithm import (
     DataType,
 )
 from research_flow.types.comon_types import ModelType, ModelConfig
+from research_flow.types.machine_learning.machine_learning_data_model import (
+    MachineLearningDataModel,
+)
 from research_flow.types.machine_learning.machine_learning_data_parts_with_scalers_model import (
     MachineLearningDataPartsWithScalersModel,
 )
@@ -34,9 +38,11 @@ class ModelEvaluateKernel(
         pd.DataFrame,
     ]
 ):
-    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     metrics: list[ModelInstance[MetricBaseModel[DataType]]]
+
+    data_converter: Transformer[MachineLearningDataModel, DataType]
 
     @property
     def pipeline_graph(
@@ -55,15 +61,17 @@ class ModelEvaluateKernel(
         )
 
         pipeline = (
-            forward[
-                tuple[
-                    MachineLearningAlgorithm[ModelType, ModelConfig, DataType],
-                    MachineLearningDataPartsWithScalersModel,
-                ]
-            ]()
-            >> (pick_data >> pick_test >> self.data_converter, pick_model)
-            >> do_predictions
-            >> evaluate_calculations
+            Map(
+                forward[
+                    tuple[
+                        MachineLearningAlgorithm[ModelType, ModelConfig, DataType],
+                        MachineLearningDataPartsWithScalersModel,
+                    ]
+                ]()
+                >> (pick_data >> pick_test >> self.data_converter, pick_model)
+                >> do_predictions
+                >> evaluate_calculations
+            )
             >> build_score_dataframe
         )
 

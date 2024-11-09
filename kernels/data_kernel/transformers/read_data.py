@@ -1,6 +1,8 @@
 import numpy as np
 from gloe import transformer
-from research_flow.types.series.single_series_to_series_signal_model import SingleSeriesToSeriesSignalModel
+from research_flow.types.series.single_series_to_series_signal_model import (
+    SingleSeriesToSeriesSignalModel,
+)
 from scipy.io import loadmat
 
 
@@ -27,4 +29,4 @@ def parse_from_mimic_mat_file(
             )
         )
 
-    return arr
+    return arr[:2]
