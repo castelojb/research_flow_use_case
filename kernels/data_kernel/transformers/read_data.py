@@ -29,4 +29,4 @@ def parse_from_mimic_mat_file(
             )
         )
 
-    return arr
+    return arr[:2]

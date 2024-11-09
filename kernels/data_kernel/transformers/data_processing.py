@@ -1,23 +1,30 @@
-from typing import Optional
-
 import numpy as np
 from gloe import partial_transformer, transformer
 from neurokit2 import ecg_clean, ppg_clean, ecg_findpeaks, ppg_findpeaks
-from research_flow.types.machine_learning.machine_learning_data_model import MachineLearningDataModel
-from research_flow.types.machine_learning.machine_learning_data_parts_model import MachineLearningDataPartsModel
-from research_flow.types.machine_learning.machine_learning_data_parts_with_scalers_model import \
-    MachineLearningDataPartsWithScalersModel
+from research_flow.types.machine_learning.machine_learning_data_model import (
+    MachineLearningDataModel,
+)
+from research_flow.types.machine_learning.machine_learning_data_parts_model import (
+    MachineLearningDataPartsModel,
+)
+from research_flow.types.machine_learning.machine_learning_data_parts_with_scalers_model import (
+    MachineLearningDataPartsWithScalersModel,
+)
 from research_flow.types.scalars.base_class import Scaler
-from research_flow.types.series.multiple_series_to_series_signal_model import MultipleSeriesToSeriesSignalModel
+from research_flow.types.series.multiple_series_to_series_signal_model import (
+    MultipleSeriesToSeriesSignalModel,
+)
 from research_flow.types.series.single_series_peaks_model import SingleSeriesPeaksModel
-from research_flow.types.series.single_series_to_series_signal_model import SingleSeriesToSeriesSignalModel
+from research_flow.types.series.single_series_to_series_signal_model import (
+    SingleSeriesToSeriesSignalModel,
+)
+
 
 def __make_segmentation(
     signal: list[float],
     segment_time: int,
     sampling_rate: int,
     overlap: float,
-    segment_length: Optional[int] = None,
 ) -> list[list[float]]:
     """
     The __make_segmentation function takes a signal and splits it into segments of length segment_length.
@@ -34,8 +41,7 @@ def __make_segmentation(
     """
     signal_lenght = len(signal)
 
-    if segment_length is None:
-        segment_length = segment_time * sampling_rate
+    segment_length = segment_time * sampling_rate
 
     data_per_second = int(segment_length / (1 - overlap))
 
@@ -51,12 +57,12 @@ def __make_segmentation(
 
     return segments
 
+
 @partial_transformer
 def segment_signals(
     signals: SingleSeriesToSeriesSignalModel,
     segment_time: int,
     overlap: float,
-    segment_lenght: Optional[int] = None,
 ) -> list[SingleSeriesToSeriesSignalModel]:
     """
     The segment_signals function takes a SingleSeriesToSeriesSignalModel object and returns a list of
@@ -67,7 +73,6 @@ def segment_signals(
     :param signals: SingleSeriesToSeriesSignalModel: Pass the data to be segmented
     :param segment_time: int: Define the time in seconds that each segment will have
     :param overlap: float: Determine how much overlap there should be between segments
-    :param segment_lenght: Optional[int]: Specify the length of each segment
     :param : Define the time in seconds that each segment will have
     :return: A list of singleseriestoseriessignalmodel objects
     :doc-author: Trelent
@@ -77,7 +82,6 @@ def segment_signals(
         segment_time,
         signals.input_series_frequency,
         overlap,
-        segment_length=segment_lenght,
     )
 
     output_segments = __make_segmentation(
@@ -85,7 +89,6 @@ def segment_signals(
         segment_time,
         signals.output_series_frequency,
         overlap,
-        segment_length=segment_lenght,
     )
 
     arr = [
@@ -99,6 +102,7 @@ def segment_signals(
     ]
 
     return arr
+
 
 def __apply_and_fit_custom_scalar(
     signals: MachineLearningDataModel,
@@ -118,6 +122,7 @@ def __apply_and_fit_custom_scalar(
     )
 
     return normalized
+
 
 @partial_transformer
 def split_signal_data_by_time(
@@ -159,6 +164,7 @@ def split_signal_data_by_time(
 
     return first_part_split, second_part_split
 
+
 @partial_transformer
 def normalize_machine_learning_data_parts(
     data_parts: MachineLearningDataPartsModel,
@@ -168,9 +174,7 @@ def normalize_machine_learning_data_parts(
     test_scaler_output_series: Scaler,
 ) -> MachineLearningDataPartsWithScalersModel:
     train_scaler_input_series_scaler = train_scaler_input_series.copy_empty_like()
-    train_scaler_output_series_scaler = (
-        train_scaler_output_series.copy_empty_like()
-    )
+    train_scaler_output_series_scaler = train_scaler_output_series.copy_empty_like()
     test_scaler_input_series_scaler = test_scaler_input_series.copy_empty_like()
     test_scaler_output_series_scaler = test_scaler_output_series.copy_empty_like()
 
@@ -203,9 +207,10 @@ def normalize_machine_learning_data_parts(
         test_scaler_output_series=test_scaler_output_series_scaler,
     )
 
+
 @transformer
 def clean_ecg_ppg_signals(
-    signals: SingleSeriesToSeriesSignalModel
+    signals: SingleSeriesToSeriesSignalModel,
 ) -> SingleSeriesToSeriesSignalModel:
     """
     The clean_ecg_ppg_signals function takes in a SingleSeriesToSeriesSignalModel object and returns the same object with cleaned ECG and PPG signals.
@@ -233,6 +238,7 @@ def clean_ecg_ppg_signals(
 
     return out
 
+
 def __get_ecg_r_picks(ecg: list[float], ecg_sampling_rate: int) -> list[int]:
     """
     The __get_ecg_r_picks function takes in an ECG signal and the sampling rate of that signal,
@@ -251,6 +257,7 @@ def __get_ecg_r_picks(ecg: list[float], ecg_sampling_rate: int) -> list[int]:
     )["ECG_R_Peaks"]
 
     return list(r_peak)
+
 
 def __get_ppg_s_peaks(
     ppg: list[float],
@@ -273,9 +280,10 @@ def __get_ppg_s_peaks(
 
     return list(peaks)
 
+
 @transformer
 def get_r_and_s_signals_peaks(
-    signals: SingleSeriesToSeriesSignalModel
+    signals: SingleSeriesToSeriesSignalModel,
 ) -> SingleSeriesPeaksModel:
     """
     The get_r_and_s_signals_peaks function takes in a SingleSeriesToSeriesSignalModel object and returns a
@@ -289,18 +297,15 @@ def get_r_and_s_signals_peaks(
     :doc-author: Trelent
     """
 
-    r_peaks = __get_ecg_r_picks(
-        signals.output_series, signals.output_series_frequency
-    )
-    s_peaks = __get_ppg_s_peaks(
-        signals.input_series, signals.input_series_frequency
-    )
+    r_peaks = __get_ecg_r_picks(signals.output_series, signals.output_series_frequency)
+    s_peaks = __get_ppg_s_peaks(signals.input_series, signals.input_series_frequency)
 
     out = SingleSeriesPeaksModel(
         output_series_peaks=r_peaks, input_series_peaks=s_peaks
     )
 
     return out
+
 
 def __align_peaks_and_signal(
     peaks: list[int], signal: list[float], window_size=15
@@ -329,22 +334,36 @@ def __align_peaks_and_signal(
 
     return peak_fixed
 
+
+def __obtain_previous_peak(
+    r_peak: list[int], s_peak: list[int], index: int
+) -> list[int]:
+    return list(filter(lambda x: x < s_peak[index], r_peak))
+
+
 def __align_signals(
     signals: SingleSeriesToSeriesSignalModel, r_peak: list[int], s_peak: list[int]
 ) -> SingleSeriesToSeriesSignalModel:
-    for index in range(2, len(s_peak)):
-        flag = 0
-        previous_peak = [x for x in r_peak if x < s_peak[index]]
-        for i2 in range(len(previous_peak) - 1, 0, -1):
-            rrinterval = r_peak[i2 + 1] - r_peak[i2]
-            ppinterval = s_peak[index + 1] - s_peak[index]
 
-            if abs(ppinterval - rrinterval) <= 0.05 * signals.input_series_frequency:
-                n = i2
-                flag = 1
-                break
+    all_previous_peak = [
+        (index, __obtain_previous_peak(r_peak, s_peak, index))
+        for index in range(2, len(s_peak))
+    ]
 
-        if flag == 1:
+    for index, previous_peak in all_previous_peak:
+
+        i2_candidates = list(
+            filter(
+                lambda x: abs(
+                    (s_peak[index + 1] - s_peak[index]) - (r_peak[x + 1] - r_peak[x])
+                )
+                <= 0.05 * signals.input_series_frequency,
+                range(len(previous_peak) - 1, 0, -1),
+            )
+        )
+
+        if len(i2_candidates) > 0:
+            i2 = i2_candidates[0]
             break
 
     shift_point = s_peak[index] - r_peak[i2]
@@ -357,6 +376,7 @@ def __align_signals(
         input_series_frequency=signals.input_series_frequency,
         output_series_frequency=signals.output_series_frequency,
     )
+
 
 @transformer
 def align_signals(
@@ -375,6 +395,7 @@ def align_signals(
     )
 
     return __align_signals(signals, r_peak_fixed, s_peak_fixed)
+
 
 @transformer
 def union_signals(
