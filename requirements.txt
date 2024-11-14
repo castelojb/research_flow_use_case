@@ -1,0 +1,11 @@
+gloe==0.6.0
+keras==2.10.0
+matplotlib==3.8.1
+neurokit2==0.2.7
+numpy==1.26.4
+pandas==2.2.2
+scikit_learn==1.3.2
+scipy==1.13.1
+tensorflow==2.10.1
+research_flow @ git+https://github.com/castelojb/research_flow.git
+fastdtw==0.3.4
